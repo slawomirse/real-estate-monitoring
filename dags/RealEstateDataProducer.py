@@ -4,15 +4,7 @@ import json
 import re
 import logging
 
-logging.basicConfig(
-    # format='%(asctime)s %(message)s', 
-    datefmt='%m/%d/%Y %I:%M:%S %p',
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    encoding='utf-8',
-    level=logging.DEBUG,
-    filename='data_gathering.log',
-    filemode='a'
-)
+
 
 
 class RealEstateDataProducer:
@@ -22,6 +14,19 @@ class RealEstateDataProducer:
         self.webpage = webpage
         self.headless = headless
         self.min_offert = min_offert
+        self.logger = logging.getLogger("RealEstateProducer")
+        self.logger.setLevel(logging.DEBUG)
+
+        # Create a handler and set its level
+        handler = logging.FileHandler('./data_gathering.log', mode='a', encoding='utf-8')
+        handler.setLevel(logging.DEBUG)
+
+        # Create a formatter and set its format
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+        handler.setFormatter(formatter)
+
+        # Add the handler to the logger
+        self.logger.addHandler(handler)
 
     def create_list_of_offert(self, ul_element):
         soup = BeautifulSoup(ul_element, 'html.parser')
@@ -49,8 +54,8 @@ class RealEstateDataProducer:
                 self.offert_list.append(offert_info)
         return self.offert_list
 
-
     def get_content(self):
+        self.logger.info('Data scraping started!')
         with sync_playwright() as p:
             # Launch a browser and create a context with cookie-related permissions disabled
             browser = p.firefox.launch(headless=True)
@@ -86,18 +91,16 @@ class RealEstateDataProducer:
                         pagination_page += 1
             except Exception as err:
                 browser.close()
-                logging.error(f'Unknown error occur: {err}')
+                self.logger.error(f'Unknown error occur: {err}')
                 raise
-            
+    
     def write_data_to_json_format(self):
-        logging.info('Writing data to file')
-        with open('output_json.json', 'w') as file:
-            file.write(json.dumps(self.offert_list, indent=4))
-        logging.info(f'New {len(self.offert_list)} offert added')
-
-if __name__ == '__main__':
-    scraping_object = RealEstateDataProducer(webpage='https://www.otodom.pl', min_offert=1000)
-    logging.info('Data scraping started!')
-    scraping_object.get_content()
-    scraping_object.write_data_to_json_format()
-    logging.info('Scraping finished successfully!')
+        self.logger.info('Writing data to file')
+        try:
+            with open('./output_json.json', 'w') as file:
+                file.write(json.dumps(self.offert_list, indent=4))
+        except Exception as err:
+            self.logger.warn(f'Error during writing to file occur: {err}')
+        self.logger.info(f'New {len(self.offert_list)} offert added')
+        self.logger.info('Scraping finished successfully!')
+        
