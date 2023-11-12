@@ -36,6 +36,4 @@ RUN apt-get update && \
     libfontconfig1 \
     libdbus-glib-1-2 \
     libdbus-1-3
-# Set the working directory
-
 USER airflow

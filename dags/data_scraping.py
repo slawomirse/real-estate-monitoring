@@ -38,7 +38,7 @@ def create_list_of_offert(ul_element):
 def get_content(**kwargs):
     logging.info('Data scraping started!')
     with sync_playwright() as p:
-        # Launch a browser and create a context with cookie-related permissions disabled
+        # Launch a browser
         browser = p.firefox.launch(headless=True)
         page = browser.new_page()
         try:
@@ -77,11 +77,12 @@ def get_content(**kwargs):
             browser.close()
             logging.error(f'Unknown error occur: {err}')
             raise
+        browser.close()
     kwargs['ti'].xcom_push(key='shared_data', value=offert_list)
     return offert_list
 
 def write_data_to_json_format(**kwargs):
-    offert_list = kwargs['ti'].xcom_pull(task_ids='Collect_data', key='shared_data')
+    offert_list = kwargs['ti'].xcom_pull(task_ids='collect_data', key='shared_data')
     logging.info('Writing data to file')
     current_timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
     try:
@@ -94,27 +95,26 @@ def write_data_to_json_format(**kwargs):
 
 default_args = {
     'owner': 'slawomirse',
-    'start_date': datetime(2023, 11, 11, 16, 15),
-    'retries': 3,
-    'retry_delay': timedelta(minutes=3),
+    'start_date': datetime(2023, 11, 11, 2),
+    'retries': 5,
+    'retry_delay': timedelta(minutes=5),
 }
 
 dag = DAG(
     'extract_data_from_otodom.pl_and_save_into_json_format',
     default_args=default_args,
-    # schedule_interval='0 0 10 * *',  # Adjust the schedule interval as needed
-    schedule_interval='*/15 * * * *',  # Adjust the schedule interval as needed
+    schedule_interval='0 0 10 * *',  # Run day 10th of the month
 )
 
 
 get_data = PythonOperator(
-    task_id='Collect_data',
+    task_id='collect_data',
     python_callable=get_content,
     dag=dag,
 )
 
 save_data = PythonOperator(
-    task_id='Save_data_to_json_format',
+    task_id='save_data_to_json_format',
     python_callable=write_data_to_json_format,
     dag=dag,
 )
