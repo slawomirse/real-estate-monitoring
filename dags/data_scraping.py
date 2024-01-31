@@ -6,6 +6,9 @@ from bs4 import BeautifulSoup
 import json
 import re
 import logging
+import yaml
+from pymongo import MongoClient
+from pymongo.server_api import ServerApi
 
 
 def create_list_of_offert(ul_element):
@@ -32,6 +35,7 @@ def create_list_of_offert(ul_element):
             offert_info['price'] = price
             offert_info['surface'] = surface
             offert_info['rooms'] = rooms
+            offert_info['ingested_at'] = str(datetime.now().strftime("%Y-%m-%dT%H:%M:%S"))
             list_elements.append(offert_info)
     return list_elements
 
@@ -86,12 +90,52 @@ def write_data_to_json_format(**kwargs):
     logging.info('Writing data to file')
     current_timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
     try:
-        with open(f'/opt/airflow/output_files/{current_timestamp}_output_json.json', 'w') as file:
+        filename = f'/opt/airflow/output_files/{current_timestamp}_output.json'
+        # Push the filename to XCom
+        kwargs['ti'].xcom_push(key='filename', value=filename)
+        with open(filename, 'w') as file:
             file.write(json.dumps(offert_list, indent=4))
     except Exception as err:
         logging.warn(f'Error during writing to file occur: {err}')
     logging.info(f'New {len(offert_list)} offert added')
     logging.info('Scraping finished successfully!')
+
+def connect_to_mongodb():
+    # Load the configuration from the file
+    config = load_config()
+
+    # Extract the connection details from the configuration
+    uri = config['uri']
+    tls = config['tls']
+    tlsCertificateKeyFile = config['tlsCertificateKeyFile']
+    serverApiVersion = config['serverApiVersion']
+
+    # Connect to MongoDB using the extracted details
+    client = MongoClient(uri,
+                         tls=tls,
+                         tlsCertificateKeyFile=tlsCertificateKeyFile,
+                         server_api=ServerApi(serverApiVersion))
+
+    db = client[config['db']]
+    collection = db[config['collection']]
+    return collection
+
+def load_config():
+    # Load the configuration from the YAML file
+    with open('/opt/airflow/config/mongodb_connection_config.yaml') as file:
+        config = yaml.safe_load(file)
+    return config
+
+def read_json_from_file(filepath):
+    with open(filepath) as file:
+        data = json.load(file)
+    return data
+
+def save_data_to_mongodb(**kwargs):
+    collection = connect_to_mongodb()
+    filename = kwargs['ti'].xcom_pull(task_ids='save_data_to_json_format', key='filename')
+    data = read_json_from_file(filename)
+    collection.insert_many(data)
 
 default_args = {
     'owner': 'slawomirse',
@@ -116,7 +160,15 @@ get_data = PythonOperator(
 save_data = PythonOperator(
     task_id='save_data_to_json_format',
     python_callable=write_data_to_json_format,
+    provide_context=True,
     dag=dag,
 )
 
-get_data >> save_data
+save_data_to_database = PythonOperator(
+    task_id='save_data_to_mongodb',
+    python_callable=save_data_to_mongodb,
+    provide_context=True,
+    dag=dag,
+)
+
+get_data >> save_data >> save_data_to_database
