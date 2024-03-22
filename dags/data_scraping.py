@@ -11,7 +11,10 @@ from pymongo import MongoClient
 from pymongo.server_api import ServerApi
 
 
-def create_list_of_offert(ul_element):
+def clear_white_characters(text):
+    return text.strip().replace('\n', '').replace('\t', '').replace('\xa0', ' ').replace('  ', '')
+
+def create_list_of_offert_v1(ul_element):
     soup = BeautifulSoup(ul_element, 'html.parser')
     list_items = soup.find_all('li')
     list_elements = []
@@ -22,14 +25,47 @@ def create_list_of_offert(ul_element):
             #Initialize empty dictionary
             offert_info = {}
             #Get div element in article
-            item_div_elements = article.find_all('div', recursive=False)
-            location_information = article.find('p', recursive=False).text
-            offert_title_div = item_div_elements[0]
-            offert_title = offert_title_div.find('span').text
-            offert_details = item_div_elements[1].find_all('span', recursive=False)
-            price = offert_details[0].text
-            surface = offert_details[3].text
-            rooms = offert_details[2].text
+            # Get the section with the offert details
+            section = article.find('section')
+            item_div_elements = section.find_all('div', recursive=False)[1]
+            offert_title = clear_white_characters(item_div_elements.select_one('div > a > p').text)
+            location_information = clear_white_characters(item_div_elements.select_one('a > p').text)
+            location_information = clear_white_characters(item_div_elements.select_one('div > div > p').text)
+            price = clear_white_characters(item_div_elements.select_one('div:nth-of-type(1) > span').text)
+            surface = clear_white_characters(item_div_elements.select_one('div > div > div > dl > dt:-soup-contains("Powierzchnia") + dd').text)
+            rooms= clear_white_characters(item_div_elements.select_one('div > div > div > dl > dt:-soup-contains("Liczba pokoi") + dd').text)
+            offert_info['offert_title'] = offert_title
+            offert_info['location'] = location_information
+            offert_info['price'] = price
+            offert_info['surface'] = surface
+            offert_info['rooms'] = rooms
+            offert_info['ingested_at'] = str(datetime.now().strftime("%Y-%m-%dT%H:%M:%S"))
+            if offert_info['price'] != 'Zapytaj o cenę':
+                list_elements.append(offert_info)
+    return list_elements
+
+def create_list_of_offert_v2(ul_element):
+    soup = BeautifulSoup(ul_element, 'html.parser')
+    list_items = soup.find_all('li')
+    list_elements = []
+    for item in list_items:
+        #Search article element
+        article = item.find('article')
+        if article is not None:
+            #Initialize empty dictionary
+            offert_info = {}
+            #Get div element in article
+            # Get the section with the offert details
+            section = article.find('section')
+            item_div_elements = section.find_all('div', recursive=False)[1]
+            offert_title = item_div_elements.select_one('div > a > p').text
+            location_information = item_div_elements.select_one('div:nth-of-type(2) > p').text
+            # Locate reduntant span element
+            reduntant_span = item_div_elements.select_one('div:nth-of-type(1) > span').find('span')
+            reduntant_span.decompose()
+            price = item_div_elements.select_one('div:nth-of-type(1) > span').text
+            surface = item_div_elements.select_one('div:nth-of-type(3) > dl > dt:-soup-contains("Powierzchnia") + dd').text.strip()
+            rooms= item_div_elements.select_one('div:nth-of-type(3) > dl > dt:-soup-contains("Liczba pokoi") + dd').text.strip()
             offert_info['offert_title'] = offert_title
             offert_info['location'] = location_information
             offert_info['price'] = price
@@ -66,15 +102,19 @@ def get_content(**kwargs):
             offert_list = []
             while len(offert_list) <= 1000:
                 if pagination_page == 1:
-                    ul_element = page.locator("span:has-text('Wszystkie ogłoszenia') + ul").inner_html()
-                    list_elements = create_list_of_offert(ul_element)
-                    offert_list += list_elements
-                    pagination_page += 1
+                        ul_element = page.locator("span:has-text('Wszystkie ogłoszenia') + ul").inner_html()
+                        with open(f'../tests/templates/html/html_list_object_{pagination_page}.html', 'w') as file:
+                            file.write(ul_element)
+                        list_elements = create_list_of_offert_v1(ul_element)
+                        offert_list += list_elements
+                        pagination_page += 1
                 else:
                     #Click the next page
-                    page.locator('[data-cy="pagination.next-page"]').click()
+                    page.locator('li[title="Go to next Page"]').click()
                     ul_element = page.locator("span:has-text('Wszystkie ogłoszenia') + ul").inner_html()
-                    list_elements = create_list_of_offert(ul_element)
+                    with open(f'../tests/templates/html/html_list_object_{pagination_page}.html', 'w') as file:
+                        file.write(ul_element)
+                    list_elements = create_list_of_offert_v1(ul_element)
                     offert_list += list_elements
                     pagination_page += 1
         except Exception as err:

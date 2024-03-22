@@ -2,5 +2,5 @@ uri: "mongodb+srv://estate1.fosbavf.mongodb.net/?authSource=%24external&authMech
 tls: true
 tlsCertificateKeyFile: "/opt/airflow/certs/svc_001.pem"
 serverApiVersion: "1"
-db: "real_estate_monitoring"
+db: "real_estate_monitoring_rawdata"
 collection: "properties"
