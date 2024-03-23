@@ -12,9 +12,17 @@ def is_valid_date():
             return False
     return _is_valid_date
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 def browser():
-    with sync_playwright() as p:
-        browser = p.chromium.launch()
+    # Initialize Playwright once per session
+    with sync_playwright() as playwright:
+        browser = playwright.firefox.launch()
         yield browser
         browser.close()
+
+@pytest.fixture(scope="function")
+def page(browser):
+    # Create a new browser page before each test
+    page = browser.new_page()
+    yield page
+    page.close()

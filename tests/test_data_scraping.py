@@ -1,7 +1,7 @@
 from dags.data_scraping import create_list_of_offert_v1 
 import pytest
 import os
-from playwright.sync_api import expect, Page
+from playwright.sync_api import expect
 import re
 
 def template_content():
@@ -15,8 +15,7 @@ def template_content():
             template_contents[template_file] = template_content
     return template_contents
 
-def test_get_page_title(page: Page, browser):
-    page = browser.new_page()
+def test_get_page_title(page):
     page.goto('http://www.otodom.pl')
     expect(page.locator('#onetrust-accept-btn-handler')).to_be_visible()
     # page.locator('button#location').click()
