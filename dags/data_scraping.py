@@ -9,7 +9,9 @@ import logging
 import yaml
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
-
+from dotenv import load_dotenv
+load_dotenv()
+import sys
 
 def clear_white_characters(text):
     return text.strip().replace('\n', '').replace('\t', '').replace('\xa0', ' ').replace('  ', '')
@@ -75,6 +77,9 @@ def create_list_of_offert_v2(ul_element):
             list_elements.append(offert_info)
     return list_elements
 
+def get_web_url(base_url):
+    pass
+
 def get_content(**kwargs):
     logging.info('Data scraping started!')
     with sync_playwright() as p:
@@ -103,8 +108,6 @@ def get_content(**kwargs):
             while len(offert_list) <= 1000:
                 if pagination_page == 1:
                         ul_element = page.locator("span:has-text('Wszystkie ogłoszenia') + ul").inner_html()
-                        with open(f'../tests/templates/html/html_list_object_{pagination_page}.html', 'w') as file:
-                            file.write(ul_element)
                         list_elements = create_list_of_offert_v1(ul_element)
                         offert_list += list_elements
                         pagination_page += 1
@@ -112,8 +115,6 @@ def get_content(**kwargs):
                     #Click the next page
                     page.locator('li[title="Go to next Page"]').click()
                     ul_element = page.locator("span:has-text('Wszystkie ogłoszenia') + ul").inner_html()
-                    with open(f'../tests/templates/html/html_list_object_{pagination_page}.html', 'w') as file:
-                        file.write(ul_element)
                     list_elements = create_list_of_offert_v1(ul_element)
                     offert_list += list_elements
                     pagination_page += 1
@@ -122,8 +123,9 @@ def get_content(**kwargs):
             logging.error(f'Unknown error occur: {err}')
             raise
         browser.close()
-    kwargs['ti'].xcom_push(key='shared_data', value=offert_list)
+    # kwargs['ti'].xcom_push(key='shared_data', value=offert_list)
     return offert_list
+
 
 def write_data_to_json_format(**kwargs):
     offert_list = kwargs['ti'].xcom_pull(task_ids='collect_data', key='shared_data')

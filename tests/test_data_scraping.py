@@ -1,4 +1,4 @@
-from dags.data_scraping import create_list_of_offert_v1 
+from dags.data_scraping import create_list_of_offert_v1, get_content
 import pytest
 import os
 from playwright.sync_api import expect
@@ -15,11 +15,19 @@ def template_content():
             template_contents[template_file] = template_content
     return template_contents
 
-def test_get_page_title(page):
-    page.goto('http://www.otodom.pl')
-    expect(page.locator('#onetrust-accept-btn-handler')).to_be_visible()
-    # page.locator('button#location').click()
-    
+# def test_get_content(page):
+#     page.goto('http://www.otodom.pl')
+#     submit_cookies = expect(page.locator('#onetrust-accept-btn-handler'), "Submit coocies button not available").to_be_visible()
+#     submit_cookies.click()
+
+#     expect(page.locator('button#location'), "Location button not available").to_be_visible().click()
+
+def test_get_content():
+    env = os.getenv('ENVIRONMENT')
+    print(f'Environment: {env}')
+    assert False
+    # a = get_content()
+    # assert isinstance(a, list)
 
 
 # @pytest.mark.parametrize('file_name, params', template_content().items(), ids=[i for i in template_content().keys()])
