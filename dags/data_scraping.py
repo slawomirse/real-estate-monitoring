@@ -13,8 +13,7 @@ from dotenv import load_dotenv
 load_dotenv()
 import sys
 
-def clear_white_characters(text):
-    return text.strip().replace('\n', '').replace('\t', '').replace('\xa0', ' ').replace('  ', '')
+
 
 def create_list_of_offert_v1(ul_element):
     soup = BeautifulSoup(ul_element, 'html.parser')
