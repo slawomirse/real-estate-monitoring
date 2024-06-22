@@ -28,7 +28,7 @@ def generate_offert_list(location: str, number_of_offerts: int):
                     city_based_list_paginated = city_based_list_paginated[:number_of_offerts]
             return city_based_list_paginated
         except Exception as e:
-            return None
+            raise e
         finally:
             playwright.close_browser()
        

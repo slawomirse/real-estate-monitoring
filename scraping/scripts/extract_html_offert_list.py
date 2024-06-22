@@ -1,4 +1,4 @@
-from playwright.sync_api import expect
+from playwright.sync_api import expect, TimeoutError as PlaywrightTimeoutError
 from scraping.selectors.main_page_selectors import WebSelector as MainPageSelector
 from scraping.selectors.offert_list_page_selectors import WebSelector as OffertListPageSelector
 import re
@@ -9,12 +9,20 @@ select_offert = OffertListPageSelector()
 
 class ListProducer:
     def __init__(self, playwright) -> None:
-        self.browser = playwright.firefox.launch(headless=True)
+        self.browser = playwright.firefox.launch(headless=False)
         page = self.browser.new_page()
         self.page = page
-        self.location = None
+        self._location = None
         self.base_url = None
 
+    @property
+    def location(self):
+        return self._location
+
+    @location.setter
+    def location(self, location_value: str):
+        self._location = location_value
+        
     def open_browser(self):
         self.page.goto(select_main.get_web_url())
 
@@ -22,11 +30,14 @@ class ListProducer:
         self.page.locator(select_main.get_submit_cookies()).click()
     
     def click_location_button(self):
-        self.page.locator(select_main.get_location_button()).click()
+        try:
+            self.page.locator(select_main.get_location_button()).click(timeout=2000)
+        except PlaywrightTimeoutError:
+            pass
 
     def type_location_information(self, location: str):
         self.location = location
-        self.page.locator(select_main.get_location_picker_input()).fill(self.location)
+        self.page.get_by_placeholder(select_main.get_location_placeholder()).fill(self.location)
 
     def click_checkbox(self):
         self.page.locator(select_main.get_checkbox_locator()).filter(has_text=re.compile(rf"{self.location},.*")).nth(0).get_by_test_id(select_main.get_checkbox_id()).click()
