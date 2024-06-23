@@ -26,6 +26,7 @@ def generate_offert_list(location: str, number_of_offerts: int):
                 city_based_list_paginated += city_based_list
                 if len(city_based_list_paginated) >= number_of_offerts:
                     city_based_list_paginated = city_based_list_paginated[:number_of_offerts]
+                pagination_page += 1
             return city_based_list_paginated
         except Exception as e:
             raise e
@@ -33,5 +34,5 @@ def generate_offert_list(location: str, number_of_offerts: int):
             playwright.close_browser()
        
 if __name__ == '__main__':
-    offert_list = generate_offert_list(location='Kraków', number_of_offerts = 1200)
+    offert_list = generate_offert_list(location='Kraków', number_of_offerts = 40)
     print(offert_list)
