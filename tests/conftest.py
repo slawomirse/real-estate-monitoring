@@ -1,6 +1,7 @@
 import pytest
 from datetime import datetime
 from playwright.sync_api import sync_playwright
+from scraping.scripts.extract_html_offert_list import ListProducer
 
 @pytest.fixture
 def is_valid_date():
@@ -13,12 +14,11 @@ def is_valid_date():
     return _is_valid_date
 
 @pytest.fixture(scope="session")
-def browser():
-    # Initialize Playwright once per session
+def list_producer():
     with sync_playwright() as playwright:
-        browser = playwright.firefox.launch()
-        yield browser
-        browser.close()
+        producer = ListProducer(playwright)
+        yield producer  # Test runs here
+        producer.close_browser()
 
 @pytest.fixture(scope="function")
 def page(browser):
