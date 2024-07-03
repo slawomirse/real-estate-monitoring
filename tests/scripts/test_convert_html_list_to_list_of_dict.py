@@ -1,4 +1,4 @@
-from scraping.scripts.convert_html_list_to_list_of_dict import HtmlToListOfDictConverter
+from libraries.scraping.scripts.convert_html_list_to_list_of_dict import HtmlToListOfDictConverter
 import pytest
 import os
 from datetime import datetime

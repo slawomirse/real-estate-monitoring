@@ -1,10 +1,11 @@
-FROM apache/airflow:latest
+FROM apache/airflow:slim-2.9.2
 
 RUN pip install --upgrade pip
 
-COPY requirements.txt /opt/airflow
+COPY requirements.txt /opt/airflow/
 WORKDIR /opt/airflow
-RUN pip install -r requirements.txt
+RUN pip install apache-airflow==${AIRFLOW_VERSION} -r requirements.txt
+ENV PYTHONPATH "${PYTHONPATH}:/opt/airflow/libraries"
 RUN playwright install
 USER root
 RUN usermod -u 1000 airflow
