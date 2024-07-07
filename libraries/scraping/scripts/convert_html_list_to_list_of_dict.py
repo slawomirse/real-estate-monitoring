@@ -9,9 +9,10 @@ select_offert = OffertListPageSelector()
 
 
 class HtmlToListOfDictConverter:
-    def __init__(self, html_list: str):
+    def __init__(self, html_list: str, location: str):
         self.html_list = html_list
         self.soup = self._get_soup_instance()
+        self.location = location
 
     def _get_soup_instance(self):
         return BeautifulSoup(self.html_list, "html.parser")
@@ -58,6 +59,7 @@ class HtmlToListOfDictConverter:
             offert_info["ingested_at"] = str(
                 datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
             )
+            offert_info["city"] = self.location
             return offert_info
         except:
             return {}

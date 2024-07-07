@@ -1,0 +1,6 @@
+uri: "mongodb+srv://estate1.fosbavf.mongodb.net/?authSource=%24external&authMechanism=MONGODB-X509&retryWrites=true&w=majority"
+tls: true
+tlsCertificateKeyFile: "certs/datamart/svc_004.pem"
+serverApiVersion: "1"
+db: "real_estate_monitoring"
+collection: "datamart"
