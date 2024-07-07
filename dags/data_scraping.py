@@ -7,6 +7,7 @@ from libraries.scraping.scripts.convert_html_list_to_list_of_dict import (
 )
 from libraries.database_connection.mongodb_connection import MongoDBConnection
 from libraries.utilities.utils import read_json_from_file
+from libraries.etl.etl_actions import ETLOperations
 
 from playwright.sync_api import sync_playwright
 
@@ -39,7 +40,9 @@ def generate_offert_list(location, number_of_offerts, **kwargs):
                     pagination_page += 1
                 url = playwright.get_paginated_url(page_number=pagination_page)
                 html_list = playwright.extract_list_of_html_offert(url=url)
-                htlodc = HtmlToListOfDictConverter(html_list=html_list)
+                htlodc = HtmlToListOfDictConverter(
+                    html_list=html_list, location=location
+                )
                 city_based_list = htlodc.create_list_of_offert()
                 city_based_list_paginated += city_based_list
                 if len(city_based_list_paginated) >= number_of_offerts:
@@ -74,11 +77,51 @@ def write_data_to_json_format(**kwargs):
 def save_data_to_mongodb(**kwargs):
     mongo_instance = MongoDBConnection()
     mongo_instance.setup_connestion()
+    etl = ETLOperations(mongo_instance.conn)
+    etl.clean_up_collection()
     filename = kwargs["ti"].xcom_pull(
         task_ids="save_data_to_json_format", key="filename"
     )
     data = read_json_from_file(filename)
     mongo_instance.conn.insert_many(data)
+    mongo_instance.close_connection()
+
+
+def transform_raw_data():
+    # Read data from MongoDB
+    mongo_instance = MongoDBConnection()
+    mongo_instance.setup_connestion()
+    etl = ETLOperations(mongo_instance.conn)
+    data = etl.read_data()
+    mongo_instance.close_connection()
+
+    # Transform data
+    mongo_instance = MongoDBConnection(
+        path="config/transformations/mongodb_connection_config.yaml"
+    )
+    mongo_instance.setup_connestion()
+    etl = ETLOperations(mongo_instance.conn)
+    data = etl.transform_raw_data(data)
+    etl.clean_up_collection()
+    etl.save_data(data)
+    mongo_instance.close_connection()
+
+
+def load_data_to_datamart():
+    mongo_instance = MongoDBConnection(
+        path="config/transformations/mongodb_connection_config.yaml"
+    )
+    mongo_instance.setup_connestion()
+    etl = ETLOperations(mongo_instance.conn)
+    data = etl.read_data()
+    mongo_instance.close_connection()
+
+    mongo_instance = MongoDBConnection(
+        path="config/datamart/mongodb_connection_config_write.yaml"
+    )
+    mongo_instance.setup_connestion()
+    etl = ETLOperations(mongo_instance.conn)
+    etl.save_data(data)
     mongo_instance.close_connection()
 
 
@@ -116,4 +159,24 @@ save_data_to_database = PythonOperator(
     dag=dag,
 )
 
-get_data >> save_data >> save_data_to_database
+transform_data = PythonOperator(
+    task_id="transform_raw_data",
+    python_callable=transform_raw_data,
+    provide_context=True,
+    dag=dag,
+)
+
+load_data_to_report_layer = PythonOperator(
+    task_id="load_data_to_datamart",
+    python_callable=load_data_to_datamart,
+    provide_context=True,
+    dag=dag,
+)
+
+(
+    get_data
+    >> save_data
+    >> save_data_to_database
+    >> transform_data
+    >> load_data_to_report_layer
+)

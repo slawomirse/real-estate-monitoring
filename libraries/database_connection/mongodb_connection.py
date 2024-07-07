@@ -5,19 +5,20 @@ import logging
 
 
 class MongoDBConnection:
-    def __init__(self, path: str = "config/mongodb_connection_config.yaml"):
+    def __init__(self, path: str = "config/raw/mongodb_connection_config.yaml"):
         """
         Initialize MongoDB connection.
         :param config_path: MongoDB configuration detauls
         """
         self.conn = None
         self.client = None
+        self.config_path = path
 
     def setup_connestion(self):
         """
         Setup MongoDB connection.
         """
-        config = load_config("config/mongodb_connection_config.yaml")
+        config = load_config(self.config_path)
         uri = config["uri"]
         tls = config["tls"]
         tlsCertificateKeyFile = config["tlsCertificateKeyFile"]
