@@ -7,7 +7,25 @@ page_elements = {
     "checkbox_locator": "li",
     "checkbox_id": "checkbox",
     "checkbox_click_v1": "#priceMin",
-    "checkbox_click_v2": 'div:text("Krakówmiasto, małopolskie")',
+    "checkbox_click_v2": {
+        "Kraków": 'div:text("Krakówmiasto, małopolskie")',
+        "Białystok": 'div:text("Białystokmiasto, podlaskie")',
+        "Warszawa": 'div:text("Warszawamiasto, mazowieckie")',
+        "Bydgoszcz": 'div:text("Bydgoszczmiasto, kujawsko-pomorskie")',
+        "Gdańsk": 'div:text("Gdańskmiasto, pomorskie")',
+        "Katowice": 'div:text("Katowicemiasto, śląskie")',
+        "Kielce": 'div:text("Kielcemiasto, świętokrzyskie")',
+        "Lublin": 'div:text("Lublinmiasto, lubelskie")',
+        "Łódź": 'div:text("Łódźmiasto, łódzkie")',
+        "Olsztyn": 'div:text("Olsztynmiasto, warmińsko-mazurskie")',
+        "Opole": 'div:text("Opolemiasto, opolskie")',
+        "Poznań": 'div:text("Poznańmiasto, wielkopolskie")',
+        "Rzeszów": 'div:text("Rzeszówmiasto, podkarpackie")',
+        "Szczecin": 'div:text("Szczecinmiasto, zachodniopomorskie")',
+        "Toruń": 'div:text("Toruńmiasto, kujawsko-pomorskie")',
+        "Wrocław": 'div:text("Wrocławmiasto, dolnośląskie")',
+        "Zielona Góra": 'div:text("Zielona Góramiasto, lubuskie")',
+    },
     "submit_button": "#search-form-submit",
     "submit_button_expected_pattern": "\w+ [0-9]+",
     "final_url_pattern": "https://www\.otodom\.pl/pl/wyniki/sprzedaz/mieszkanie/.*",
@@ -15,7 +33,7 @@ page_elements = {
 
 
 class WebSelector:
-    def __init__(self) -> None:
+    def __init__(self, location: str) -> None:
         self.web_url = page_elements["web_url"]
         self.submit_cookies = page_elements["submit_cookies"]
         self.location_button = page_elements["location_button"]
@@ -26,7 +44,7 @@ class WebSelector:
         self.checkbox_locator = page_elements["checkbox_locator"]
         self.checkbox_id = page_elements["checkbox_id"]
         self.checkbox_click_v1 = page_elements["checkbox_click_v1"]
-        self.checkbox_click_v2 = page_elements["checkbox_click_v2"]
+        self.checkbox_click_v2 = page_elements["checkbox_click_v2"][location]
         self.submit_button = page_elements["submit_button"]
         self.submit_button_expected_pattern = page_elements[
             "submit_button_expected_pattern"
