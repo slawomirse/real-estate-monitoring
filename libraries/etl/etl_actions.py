@@ -19,7 +19,13 @@ class ETLOperations:
             "%Y-%m"
         )
         data["cleaned_price"] = (
-            data["price"].str.replace("zł", "").str.replace(" ", "").round().astype(int)
+            data["price"]
+            .str.replace("zł", "")
+            .str.replace(" ", "")
+            .str.replace(",", ".")
+            .astype(float)
+            .round()
+            .astype(int)
         )
         data["price_per_m2"] = (
             (data["cleaned_price"] / data["surface_number"]).round().astype(int)

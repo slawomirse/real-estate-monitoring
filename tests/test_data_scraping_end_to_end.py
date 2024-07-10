@@ -3,16 +3,24 @@ from libraries.scraping.scripts.convert_html_list_to_list_of_dict import (
     HtmlToListOfDictConverter,
 )
 from playwright.sync_api import sync_playwright
+import pytest
+
+
+testing_data = [
+    {"location": "Kraków", "number_of_offerts": 100},
+    {"location": "Warszawa", "number_of_offerts": 100},
+    {"location": "Wrocław", "number_of_offerts": 100},
+]
 
 
 def generate_offert_list(location: str, number_of_offerts: int):
     with sync_playwright() as playwright:
         try:
-            playwright = ListProducer(playwright)
+            playwright = ListProducer(playwright, location=location)
             playwright.open_browser()
             playwright.accept_cookies()
             playwright.click_location_button()
-            playwright.type_location_information(location=location)
+            playwright.type_location_information()
             playwright.click_checkbox()
             playwright.click_submit()
             playwright.set_base_url()
@@ -24,7 +32,9 @@ def generate_offert_list(location: str, number_of_offerts: int):
                     pagination_page += 1
                 url = playwright.get_paginated_url(page_number=pagination_page)
                 html_list = playwright.extract_list_of_html_offert(url=url)
-                htlodc = HtmlToListOfDictConverter(html_list=html_list)
+                htlodc = HtmlToListOfDictConverter(
+                    html_list=html_list, location=location
+                )
                 city_based_list = htlodc.create_list_of_offert()
                 city_based_list_paginated += city_based_list
                 if len(city_based_list_paginated) >= number_of_offerts:
@@ -39,8 +49,12 @@ def generate_offert_list(location: str, number_of_offerts: int):
             playwright.close_browser()
 
 
-def test_end_to_end_scraping_process():
-    offert_list = generate_offert_list(location="Kraków", number_of_offerts=100)
+@pytest.mark.parametrize(
+    "location, number_of_offerts",
+    [(data["location"], data["number_of_offerts"]) for data in testing_data],
+)
+def test_end_to_end_scraping_process(location, number_of_offerts):
+    offert_list = generate_offert_list(location, number_of_offerts)
     assert len(offert_list) == 100
     assert isinstance(offert_list, list)
     assert isinstance(offert_list[0], dict)

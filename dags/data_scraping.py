@@ -1,12 +1,13 @@
 from airflow.operators.python_operator import PythonOperator
 from airflow import DAG
+from airflow.utils.task_group import TaskGroup
 
 from libraries.scraping.scripts.extract_html_offert_list import ListProducer
 from libraries.scraping.scripts.convert_html_list_to_list_of_dict import (
     HtmlToListOfDictConverter,
 )
 from libraries.database_connection.mongodb_connection import MongoDBConnection
-from libraries.utilities.utils import read_json_from_file
+from libraries.utilities.utils import read_json_from_directory
 from libraries.etl.etl_actions import ETLOperations
 
 from playwright.sync_api import sync_playwright
@@ -14,6 +15,7 @@ from playwright.sync_api import sync_playwright
 from datetime import datetime, timedelta
 import json
 import logging
+import os
 
 from dotenv import load_dotenv
 
@@ -24,11 +26,11 @@ def generate_offert_list(location, number_of_offerts, **kwargs):
     logging.info("Data scraping started!")
     with sync_playwright() as playwright:
         try:
-            playwright = ListProducer(playwright)
+            playwright = ListProducer(playwright, location=location)
             playwright.open_browser()
             playwright.accept_cookies()
             playwright.click_location_button()
-            playwright.type_location_information(location=location)
+            playwright.type_location_information()
             playwright.click_checkbox()
             playwright.click_submit()
             playwright.set_base_url()
@@ -50,7 +52,8 @@ def generate_offert_list(location, number_of_offerts, **kwargs):
                         :number_of_offerts
                     ]
                 pagination_page += 1
-            kwargs["ti"].xcom_push(key="shared_data", value=city_based_list_paginated)
+            kwargs["ti"].xcom_push(key=f"shared_data", value=city_based_list_paginated)
+            kwargs["ti"].xcom_push(key=f"location", value=location)
             return city_based_list_paginated
         except Exception as e:
             raise e
@@ -58,14 +61,23 @@ def generate_offert_list(location, number_of_offerts, **kwargs):
             playwright.close_browser()
 
 
-def write_data_to_json_format(**kwargs):
-    offert_list = kwargs["ti"].xcom_pull(task_ids="collect_data", key="shared_data")
+def write_data_to_json_format(task_group_id, **kwargs):
+    offert_list = kwargs["ti"].xcom_pull(
+        task_ids=f"{task_group_id}.collect_data", key="shared_data"
+    )
+    location = kwargs["ti"].xcom_pull(
+        task_ids=f"{task_group_id}.collect_data", key="location"
+    )
     logging.info("Writing data to file")
-    current_timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+    current_date = datetime.now().strftime("%Y-%m-%d")
     try:
-        filename = f"/opt/airflow/output_files/{current_timestamp}_output.json"
+        directory_path = f"/opt/airflow/output_files/{current_date}"
+        if not os.path.exists(directory_path):
+            os.makedirs(directory_path)
+            logging.info(f"Directory {directory_path} created")
+        filename = os.path.join(directory_path, f"{location}.json")
         # Push the filename to XCom
-        kwargs["ti"].xcom_push(key="filename", value=filename)
+        kwargs["ti"].xcom_push(key="directory_path", value=directory_path)
         with open(filename, "w") as file:
             file.write(json.dumps(offert_list, indent=4))
     except Exception as err:
@@ -74,15 +86,17 @@ def write_data_to_json_format(**kwargs):
     logging.info("Scraping finished successfully!")
 
 
-def save_data_to_mongodb(**kwargs):
+def save_data_to_mongodb(task_group_id, **kwargs):
     mongo_instance = MongoDBConnection()
     mongo_instance.setup_connestion()
     etl = ETLOperations(mongo_instance.conn)
     etl.clean_up_collection()
-    filename = kwargs["ti"].xcom_pull(
-        task_ids="save_data_to_json_format", key="filename"
+    directory_path = kwargs["ti"].xcom_pull(
+        task_ids=f"{task_group_id}.save_data_to_json_format", key="directory_path"
     )
-    data = read_json_from_file(filename)
+    logging.info(f"Reading data from {directory_path}")
+    data = read_json_from_directory(directory_path)
+    logging.info(f"Data sample: {data[:5]}")
     mongo_instance.conn.insert_many(data)
     mongo_instance.close_connection()
 
@@ -132,51 +146,63 @@ default_args = {
     "retry_delay": timedelta(minutes=5),
 }
 
-dag = DAG(
+
+scraping_details = [
+    {"location": "Kraków", "number_of_offerts": 100},
+    {"location": "Warszawa", "number_of_offerts": 100},
+    {"location": "Wrocław", "number_of_offerts": 100},
+]
+
+with DAG(
     "extract_data_from_otodom.pl_and_save_into_json_format",
     default_args=default_args,
     schedule_interval="0 0 10 * *",  # Run day 10th of the month
-)
+) as dag:
 
-get_data = PythonOperator(
-    task_id="collect_data",
-    python_callable=generate_offert_list,
-    op_kwargs={"location": "Kraków", "number_of_offerts": 100},
-    dag=dag,
-)
+    for scraping_detail in scraping_details:
+        task_group_id = f"scrape_and_save_data_{scraping_detail['location']}"
+        with TaskGroup(group_id=task_group_id) as scrape_and_save_data:
+            get_data = PythonOperator(
+                task_id="collect_data",
+                python_callable=generate_offert_list,
+                op_kwargs={
+                    "location": scraping_detail["location"],
+                    "number_of_offerts": scraping_detail["number_of_offerts"],
+                },
+            )
 
-save_data = PythonOperator(
-    task_id="save_data_to_json_format",
-    python_callable=write_data_to_json_format,
-    provide_context=True,
-    dag=dag,
-)
+            save_data = PythonOperator(
+                task_id=f"save_data_to_json_format",
+                python_callable=write_data_to_json_format,
+                op_kwargs={"task_group_id": task_group_id},
+                provide_context=True,
+            )
+            get_data >> save_data
 
-save_data_to_database = PythonOperator(
-    task_id="save_data_to_mongodb",
-    python_callable=save_data_to_mongodb,
-    provide_context=True,
-    dag=dag,
-)
+    save_data_to_database = PythonOperator(
+        task_id="save_data_to_mongodb",
+        python_callable=save_data_to_mongodb,
+        op_kwargs={
+            "task_group_id": f'scrape_and_save_data_{scraping_details[0]["location"]}'
+        },
+        provide_context=True,
+    )
 
-transform_data = PythonOperator(
-    task_id="transform_raw_data",
-    python_callable=transform_raw_data,
-    provide_context=True,
-    dag=dag,
-)
+    transform_data = PythonOperator(
+        task_id="transform_raw_data",
+        python_callable=transform_raw_data,
+        provide_context=True,
+    )
 
-load_data_to_report_layer = PythonOperator(
-    task_id="load_data_to_datamart",
-    python_callable=load_data_to_datamart,
-    provide_context=True,
-    dag=dag,
-)
+    load_data_to_report_layer = PythonOperator(
+        task_id="load_data_to_datamart",
+        python_callable=load_data_to_datamart,
+        provide_context=True,
+    )
 
-(
-    get_data
-    >> save_data
-    >> save_data_to_database
-    >> transform_data
-    >> load_data_to_report_layer
-)
+    (
+        scrape_and_save_data
+        >> save_data_to_database
+        >> transform_data
+        >> load_data_to_report_layer
+    )
