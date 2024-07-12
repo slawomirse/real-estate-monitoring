@@ -148,15 +148,29 @@ default_args = {
 
 
 scraping_details = [
-    {"location": "Kraków", "number_of_offerts": 100},
-    {"location": "Warszawa", "number_of_offerts": 100},
-    {"location": "Wrocław", "number_of_offerts": 100},
+    {"location": "Kraków", "number_of_offerts": 500},
+    {"location": "Warszawa", "number_of_offerts": 500},
+    {"location": "Wrocław", "number_of_offerts": 500},
+    {"location": "Białystok", "number_of_offerts": 250},
+    {"location": "Bydgoszcz", "number_of_offerts": 250},
+    {"location": "Gdańsk", "number_of_offerts": 250},
+    {"location": "Katowice", "number_of_offerts": 250},
+    {"location": "Kielce", "number_of_offerts": 250},
+    {"location": "Lublin", "number_of_offerts": 250},
+    {"location": "Łódź", "number_of_offerts": 250},
+    {"location": "Olsztyn", "number_of_offerts": 250},
+    {"location": "Opole", "number_of_offerts": 250},
+    {"location": "Poznań", "number_of_offerts": 250},
+    {"location": "Rzeszów", "number_of_offerts": 250},
+    {"location": "Szczecin", "number_of_offerts": 250},
+    {"location": "Toruń", "number_of_offerts": 250},
+    {"location": "Zielona Góra", "number_of_offerts": 250},
 ]
 
 with DAG(
     "extract_data_from_otodom.pl_and_save_into_json_format",
     default_args=default_args,
-    schedule_interval="0 0 10 * *",  # Run day 10th of the month
+    schedule_interval="0 2 10 * *",  # Run at 2AM on the 10th of every month
 ) as dag:
 
     for scraping_detail in scraping_details:
