@@ -9,6 +9,12 @@ Welcome to the Real Estate Monitoring project! This project aims to provide a co
 - Data visualization: Visualize real estate data through interactive charts and maps for better analysis and decision-making.
 - User-friendly interface: Enjoy a clean and intuitive interface that makes it easy to navigate and use the application.
 
+## Data flow
+Here is a visual representation of the data flow in the Real Estate Monitoring project:
+
+![Data Flow](/path/to/screenshot/folder/data_flow.png)
+
+
 ## Explore PowerBI dashboard
 Power BI is regarded as the final stage and output of the application, delivering insightful data visualizations and comprehensive business intelligence.
 
