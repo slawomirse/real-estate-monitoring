@@ -45,25 +45,22 @@ To get started with the Dockerized Python app, follow these steps:
 ## Important Notes
 
 Here are some important notes to keep in mind while using the Real Estate Monitoring project:
-    To ensure full access to the mounted folder on your machine, the user ID on your machine should match the user ID of the airflow user in the dockerized app. You can find your user ID by running the command `id -u $USER`.
+To ensure full access to the mounted folder on your machine, the user ID on your machine should match the user ID of the airflow user in the dockerized app. You can find your user ID by running the command `id -u $USER`.
 
-    - To simplify the process, SQLite is used as a database backend and `SequentialExecutor` as a worker. Use the tools of your choice to customize.
-
-    - Keep in mind that the project requires a `.env` file with the following defined environment variables: `AIRFLOW_USER_USERNAME`, `AIRFLOW_USER_PASSWORD`, `AIRFLOW_USER_FIRSTNAME`, `AIRFLOW_USER_LASTNAME`, `AIRFLOW_USER_EMAIL`.
-
-    - Include a `certs` directory with the following structure:
-    ```
-    certs
-    ├── datamart
-    │   ├── svc_003.pem
-    │   └── svc_004.pem
-    ├── raw
-    │   └── svc_001.pem
-    └── transformations
-        └── svc_002.pem
-    ```
-
-    - Please be informed that the project also requires a connection to a MongoDB cluster, which needs to be set up individually by the user.
+- To simplify the process, SQLite is used as a database backend and `SequentialExecutor` as a worker. Use the tools of your choice to customize.
+- Keep in mind that the project requires a `.env` file with the following defined environment variables: `AIRFLOW_USER_USERNAME`, `AIRFLOW_USER_PASSWORD`, `AIRFLOW_USER_FIRSTNAME`, `AIRFLOW_USER_LASTNAME`, `AIRFLOW_USER_EMAIL`.
+- Include a `certs` directory with the following structure:
+```
+certs
+├── datamart
+│   ├── svc_003.pem
+│   └── svc_004.pem
+├── raw
+│   └── svc_001.pem
+└── transformations
+    └── svc_002.pem
+```
+- Please be informed that the project also requires a connection to a MongoDB cluster, which needs to be set up individually by the user.
 
 
 By following these notes, you can make the most out of the Real Estate Monitoring project and enhance your real estate endeavors.
