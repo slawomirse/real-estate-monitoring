@@ -10,13 +10,4 @@ def test_transformation():
     db_op_instance = ETLOperations(mongo_instance.conn)
     data = db_op_instance.read_data()
     mongo_instance.close_connection()
-    print(
-        tabulate(
-            db_op_instance.transform_raw_data(data.head()),
-            headers="keys",
-            tablefmt="pretty",
-            maxcolwidths=10,
-        )
-    )
     assert isinstance(data, pd.DataFrame)
-    assert False

@@ -7,4 +7,4 @@ def test_extracing_html_data(list_producer, location="Kraków"):
     playwright.click_checkbox()
     playwright.click_submit()
     playwright.set_base_url()
-    assert 'otodom' in playwright.base_url
+    assert "otodom" in playwright.base_url
