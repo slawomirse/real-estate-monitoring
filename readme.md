@@ -14,6 +14,16 @@ Here is a visual representation of the data flow in the Real Estate Monitoring p
 
 ![Data Flow](screenshots/data_flow.png)
 
+## Tech stack
+The Real Estate Monitoring project utilizes the following technology stack:
+- Containerization: Docker for containerizing the Python app.
+- Data scraping: Playwright + BeautifoulSoup
+- Task schedular: Apache airlow
+- Database: MongoDB for storing real estate data.
+- Data visualization: Power BI for creating insightful data visualizations.
+- Version control: Git for managing the source code.
+- Deployment: Google Cloud Platform Compute Engine
+- Unit testing: pyTest
 
 ## Explore PowerBI dashboard
 Power BI is regarded as the final stage and output of the application, delivering insightful data visualizations and comprehensive business intelligence.
