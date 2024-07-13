@@ -12,7 +12,7 @@ Welcome to the Real Estate Monitoring project! This project aims to provide a co
 ## Data flow
 Here is a visual representation of the data flow in the Real Estate Monitoring project:
 
-![Data Flow](/path/to/screenshot/folder/data_flow.png)
+![Data Flow](screenshots/data_flow.png)
 
 
 ## Explore PowerBI dashboard
