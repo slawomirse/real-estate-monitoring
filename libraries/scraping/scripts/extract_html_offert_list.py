@@ -11,6 +11,29 @@ select_offert = OffertListPageSelector()
 
 
 class ListProducer:
+    """
+    A class that represents a list producer for extracting HTML offers.
+
+    Attributes:
+        browser: The browser instance used for scraping.
+        page: The page instance used for navigation.
+        location: The location for which the offers are extracted.
+        base_url: The base URL of the website.
+        select_main: An instance of MainPageSelector for selecting elements on the main page.
+
+    Methods:
+        open_browser: Opens the browser and navigates to the main page.
+        accept_cookies: Accepts the cookies on the main page.
+        click_location_button: Clicks the location button on the main page.
+        type_location_information: Types the location information on the main page.
+        click_checkbox: Clicks the checkbox for the specified location on the main page.
+        click_submit: Clicks the submit button on the main page.
+        set_base_url: Sets the base URL of the website.
+        get_paginated_url: Returns the URL for a specific page number.
+        extract_list_of_html_offert: Extracts the list of HTML offers from a given URL.
+        close_browser: Closes the browser.
+    """
+
     def __init__(self, playwright, location) -> None:
         self.browser = playwright.firefox.launch(headless=True)
         page = self.browser.new_page()
@@ -19,13 +42,13 @@ class ListProducer:
         self.base_url = None
         self.select_main = MainPageSelector(location=location)
 
-    def open_browser(self):
+    def open_browser(self) -> None:
         self.page.goto(self.select_main.get_web_url())
 
-    def accept_cookies(self):
+    def accept_cookies(self) -> None:
         self.page.locator(self.select_main.get_submit_cookies()).click()
 
-    def click_location_button(self):
+    def click_location_button(self) -> None:
         # Version1
         try:
             self.page.locator(self.select_main.get_location_button()).click(
@@ -42,12 +65,12 @@ class ListProducer:
         except PlaywrightTimeoutError:
             pass
 
-    def type_location_information(self):
+    def type_location_information(self) -> None:
         self.page.locator(self.select_main.get_location_placeholder_filtered()).fill(
             self.location
         )
 
-    def click_checkbox(self):
+    def click_checkbox(self) -> None:
         # Version 1
         try:
             self.page.locator(self.select_main.get_checkbox_locator()).filter(
@@ -66,7 +89,7 @@ class ListProducer:
         except PlaywrightTimeoutError:
             pass
 
-    def click_submit(self):
+    def click_submit(self) -> None:
         submit_button = self.page.locator(self.select_main.get_submit_button())
         expect(submit_button).to_have_text(
             re.compile(rf"{self.select_main.get_submit_button_expected_pattern()}"),
@@ -77,15 +100,15 @@ class ListProducer:
             re.compile(rf"{self.select_main.get_final_url_pattern()}")
         )
 
-    def set_base_url(self):
+    def set_base_url(self) -> None:
         self.base_url = self.page.url
 
-    def get_paginated_url(self, page_number: int):
+    def get_paginated_url(self, page_number: int) -> str:
         return f"{self.base_url}?page={page_number}"
 
-    def extract_list_of_html_offert(self, url: str):
+    def extract_list_of_html_offert(self, url: str) -> str:
         self.page.goto(url)
         return self.page.locator(select_offert.get_offert_list()).inner_html()
 
-    def close_browser(self):
+    def close_browser(self) -> None:
         self.browser.close()

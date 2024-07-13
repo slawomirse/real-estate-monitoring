@@ -9,15 +9,37 @@ select_offert = OffertListPageSelector()
 
 
 class HtmlToListOfDictConverter:
+    """
+    Converts HTML list to a list of dictionaries representing the offer information.
+    """
+
     def __init__(self, html_list: str, location: str):
         self.html_list = html_list
         self.soup = self._get_soup_instance()
         self.location = location
 
-    def _get_soup_instance(self):
+    def _get_soup_instance(self) -> BeautifulSoup:
         return BeautifulSoup(self.html_list, "html.parser")
 
-    def create_offert_dict(self, item_div_elements: BeautifulSoup):
+    def create_offert_dict(self, item_div_elements: BeautifulSoup) -> dict:
+        """
+        Create a dictionary containing information about a real estate offer.
+
+        Args:
+            item_div_elements (BeautifulSoup): The BeautifulSoup object containing the HTML elements of the offer.
+
+        Returns:
+            dict: A dictionary containing the following information about the offer:
+                - 'offert_title': The title of the offer.
+                - 'location': The location information of the offer.
+                - 'price': The price of the offer.
+                - 'surface': The surface area of the offer.
+                - 'rooms': The number of rooms in the offer.
+                - 'ingested_at': The timestamp when the offer was ingested.
+                - 'city': The location city of the offer.
+
+                If any error occurs during the extraction of the information, an empty dictionary is returned.
+        """
         offert_info = {}
         try:
             price = clear_white_characters(
@@ -64,7 +86,13 @@ class HtmlToListOfDictConverter:
         except:
             return {}
 
-    def create_list_of_offert(self):
+    def create_list_of_offert(self) -> list:
+        """
+        Creates a list of offer dictionaries from the HTML content.
+
+        Returns:
+            list: A list of offer dictionaries.
+        """
         list_items = self.soup.find_all("li")
         list_elements = []
         for item in list_items:

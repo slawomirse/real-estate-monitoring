@@ -3,7 +3,7 @@ import yaml
 import os
 
 
-def read_json_from_directory(directory_path: str):
+def read_json_from_directory(directory_path: str) -> list:
     data = []
     for filename in os.listdir(directory_path):
         if filename.endswith(".json"):
@@ -14,18 +14,18 @@ def read_json_from_directory(directory_path: str):
     return [item for sublist in data for item in sublist]
 
 
-def write_json_to_file(data, filename):
+def write_json_to_file(data: dict, filename: str) -> None:
     with open(filename, "w", encoding="utf-8") as output:
         json.dump(data, output, ensure_ascii=False, indent=4)
 
 
-def load_config(path: str):
+def load_config(path: str) -> dict:
     with open(path) as file:
         config = yaml.safe_load(file)
     return config
 
 
-def clear_white_characters(text: str):
+def clear_white_characters(text: str) -> str:
     return (
         text.strip()
         .replace("\n", "")

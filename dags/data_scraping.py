@@ -22,7 +22,19 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def generate_offert_list(location, number_of_offerts, **kwargs):
+def generate_offert_list(
+    location: str, number_of_offerts: int, **kwargs
+) -> list[dict[str]]:
+    """
+    Generate a list of offerts based on the specified location and number of offerts.
+
+    Args:
+        location (str): The location to scrape offerts from.
+        number_of_offerts (int): The number of offerts to generate.
+
+    Returns:
+        List[Dict[str, Any]]: The list of offerts as dictionaries.
+    """
     logging.info("Data scraping started!")
     with sync_playwright() as playwright:
         try:
@@ -61,7 +73,17 @@ def generate_offert_list(location, number_of_offerts, **kwargs):
             playwright.close_browser()
 
 
-def write_data_to_json_format(task_group_id, **kwargs):
+def write_data_to_json_format(task_group_id: str, **kwargs) -> None:
+    """
+    Write scraped data to a JSON file.
+
+    Args:
+        task_group_id (str): The ID of the task group.
+        **kwargs: Additional keyword arguments.
+
+    Returns:
+        None
+    """
     offert_list = kwargs["ti"].xcom_pull(
         task_ids=f"{task_group_id}.collect_data", key="shared_data"
     )
@@ -86,9 +108,19 @@ def write_data_to_json_format(task_group_id, **kwargs):
     logging.info("Scraping finished successfully!")
 
 
-def save_data_to_mongodb(task_group_id, **kwargs):
+def save_data_to_mongodb(task_group_id: str, **kwargs) -> None:
+    """
+    Save scraped data to MongoDB.
+
+    Args:
+        task_group_id (str): The ID of the task group.
+        **kwargs: Additional keyword arguments.
+
+    Returns:
+        None
+    """
     mongo_instance = MongoDBConnection()
-    mongo_instance.setup_connestion()
+    mongo_instance.setup_connection()
     etl = ETLOperations(mongo_instance.conn)
     etl.clean_up_collection()
     directory_path = kwargs["ti"].xcom_pull(
@@ -101,7 +133,13 @@ def save_data_to_mongodb(task_group_id, **kwargs):
     mongo_instance.close_connection()
 
 
-def transform_raw_data():
+def transform_raw_data() -> None:
+    """
+    Transform the raw data retrieved from MongoDB.
+
+    Returns:
+        None
+    """
     # Read data from MongoDB
     mongo_instance = MongoDBConnection()
     mongo_instance.setup_connestion()
@@ -121,7 +159,21 @@ def transform_raw_data():
     mongo_instance.close_connection()
 
 
-def load_data_to_datamart():
+def load_data_to_datamart() -> None:
+    """
+    Loads data from a source, performs ETL operations, and saves the transformed data to a datamart.
+
+    This function connects to a MongoDB instance using the connection configuration specified in the
+    'mongodb_connection_config.yaml' file located in the 'config/transformations' directory. It then
+    performs ETL operations on the data using the ETLOperations class and saves the transformed data
+    to a MongoDB instance using the connection configuration specified in the 'mongodb_connection_config_write.yaml'
+    file located in the 'config/datamart' directory.
+
+    Note: Make sure to configure the connection settings in the respective configuration files before running this function.
+
+    Returns:
+        None
+    """
     mongo_instance = MongoDBConnection(
         path="config/transformations/mongodb_connection_config.yaml"
     )

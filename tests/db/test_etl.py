@@ -1,7 +1,6 @@
 from libraries.etl.etl_actions import ETLOperations
 from libraries.database_connection.mongodb_connection import MongoDBConnection
 import pandas as pd
-from tabulate import tabulate
 
 
 def test_transformation():
