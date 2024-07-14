@@ -28,6 +28,8 @@ The Real Estate Monitoring project utilizes the following technology stack:
 ## Explore PowerBI dashboard
 Power BI is regarded as the final stage and output of the application, delivering insightful data visualizations and comprehensive business intelligence.
 
+[PowerBI Dashboard](https://app.powerbi.com/view?r=eyJrIjoiYjE3YTAyMDItODAwZS00Mjg4LWFjYzktNjNjNGUyOGJkMGQ2IiwidCI6IjVmM2M1Njc1LWU1N2QtNDM1OC04ZTk5LTUzMzMxY2RlYzQ4ZiJ9)
+
 ## Getting Started
 
 To get started with the Dockerized Python app, follow these steps:
