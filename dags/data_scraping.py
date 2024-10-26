@@ -51,7 +51,6 @@ def generate_offert_list(
             while len(city_based_list_paginated) < number_of_offerts:
                 if pagination_page == 1:
                     url = playwright.base_url
-                    pagination_page += 1
                 url = playwright.get_paginated_url(page_number=pagination_page)
                 html_list = playwright.extract_list_of_html_offert(url=url)
                 htlodc = HtmlToListOfDictConverter(
@@ -221,6 +220,7 @@ scraping_details = [
 with DAG(
     "extract_data_from_otodom.pl_and_save_into_json_format",
     default_args=default_args,
+    schedule_interval=None,
 ) as dag:
 
     for scraping_detail in scraping_details:
