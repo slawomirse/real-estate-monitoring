@@ -14,7 +14,7 @@ class MongoDBConnection:
         self.client = None
         self.config_path = path
 
-    def setup_connestion(self):
+    def setup_connection(self):
         """
         Setup MongoDB connection.
         """
