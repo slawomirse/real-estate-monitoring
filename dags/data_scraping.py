@@ -216,13 +216,11 @@ scraping_details = [
     {"location": "Rzeszów", "number_of_offerts": 250},
     {"location": "Szczecin", "number_of_offerts": 250},
     {"location": "Toruń", "number_of_offerts": 250},
-    {"location": "Zielona Góra", "number_of_offerts": 250},
 ]
 
 with DAG(
     "extract_data_from_otodom.pl_and_save_into_json_format",
     default_args=default_args,
-    schedule_interval="0 2 10 * *",  # Run at 2AM on the 10th of every month
 ) as dag:
 
     for scraping_detail in scraping_details:
