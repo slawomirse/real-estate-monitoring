@@ -141,7 +141,7 @@ def transform_raw_data() -> None:
     """
     # Read data from MongoDB
     mongo_instance = MongoDBConnection()
-    mongo_instance.setup_connestion()
+    mongo_instance.setup_connection()
     etl = ETLOperations(mongo_instance.conn)
     data = etl.read_data()
     mongo_instance.close_connection()
@@ -176,7 +176,7 @@ def load_data_to_datamart() -> None:
     mongo_instance = MongoDBConnection(
         path="config/transformations/mongodb_connection_config.yaml"
     )
-    mongo_instance.setup_connestion()
+    mongo_instance.setup_connection()
     etl = ETLOperations(mongo_instance.conn)
     data = etl.read_data()
     mongo_instance.close_connection()
