@@ -15,6 +15,7 @@ x-airflow-common:
     - ./output_files:/opt/airflow/output_files
     - ./airflow.db:/opt/airflow/airflow.db
     - ./certs:/opt/airflow/certs
+    - ./config:/opt/airflow/config
 
 services:
   airflow:

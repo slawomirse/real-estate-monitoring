@@ -7,7 +7,7 @@ import pytest
 
 
 testing_data = [
-    {"location": "Kraków", "number_of_offerts": 100},
+    {"location": "Kraków", "number_of_offerts": 250},
     {"location": "Warszawa", "number_of_offerts": 100},
     {"location": "Wrocław", "number_of_offerts": 100},
 ]
@@ -29,7 +29,6 @@ def generate_offert_list(location: str, number_of_offerts: int):
             while len(city_based_list_paginated) < number_of_offerts:
                 if pagination_page == 1:
                     url = playwright.base_url
-                    pagination_page += 1
                 url = playwright.get_paginated_url(page_number=pagination_page)
                 html_list = playwright.extract_list_of_html_offert(url=url)
                 htlodc = HtmlToListOfDictConverter(
@@ -55,7 +54,7 @@ def generate_offert_list(location: str, number_of_offerts: int):
 )
 def test_end_to_end_scraping_process(location, number_of_offerts):
     offert_list = generate_offert_list(location, number_of_offerts)
-    assert len(offert_list) == 100
+    assert len(offert_list) == number_of_offerts
     assert isinstance(offert_list, list)
     assert isinstance(offert_list[0], dict)
     # Check duplicates
@@ -63,3 +62,6 @@ def test_end_to_end_scraping_process(location, number_of_offerts):
     assert len(offert_list) == len(
         unique_items
     ), "There are duplicates in the offert list"
+    assert (
+        offert_list[0]["offert_title"] != offert_list[0]["location"]
+    ), "Location should be different than title"

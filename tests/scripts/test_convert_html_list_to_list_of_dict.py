@@ -32,7 +32,9 @@ def template_content():
     ids=[i for i in template_content().keys()],
 )
 def test_converting_html_to_dict(file_name, html_content):
-    html_to_list_instance = HtmlToListOfDictConverter(html_list=html_content)
+    html_to_list_instance = HtmlToListOfDictConverter(
+        html_list=html_content, location="Kraków"
+    )
     output_dict = html_to_list_instance.create_list_of_offert()
     assert isinstance(output_dict, list)
     for offert in output_dict:
@@ -59,6 +61,9 @@ def test_converting_html_to_dict(file_name, html_content):
         assert all(key in offert for key in required_keys)
         assert len(offert["offert_title"]) > 0
         assert any(key in offert["location"] for key in location_keys)
+        assert (
+            offert["offert_title"] != offert["location"]
+        ), "Title should be different than location"
         assert "zł" in offert["price"]
         assert "m²" in offert["surface"]
         assert "pokój" or "pokoje" in offert["rooms"]

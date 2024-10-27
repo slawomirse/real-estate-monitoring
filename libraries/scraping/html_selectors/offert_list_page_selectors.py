@@ -2,7 +2,7 @@ page_elements = {
     "offert_list": 'span:has-text("Wszystkie ogłoszenia") + ul',
     "offert_title": "div > a > p",
     "price": "div:nth-of-type(1) > span",
-    "location_information": "a > p",
+    "location_information": "div:nth-of-type(2) > p",
     "surface": "div:nth-of-type(3)",
     "surface_label": "dt",
     "surface_value": "dd",

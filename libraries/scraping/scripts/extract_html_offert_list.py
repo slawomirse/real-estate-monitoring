@@ -104,7 +104,7 @@ class ListProducer:
         self.base_url = self.page.url
 
     def get_paginated_url(self, page_number: int) -> str:
-        return f"{self.base_url}?page={page_number}"
+        return f"{self.base_url}?page={page_number}&page={page_number}"
 
     def extract_list_of_html_offert(self, url: str) -> str:
         self.page.goto(url)
